@@ -55,6 +55,19 @@ app.post('/users', (req, res) => {
     });
 });
 
+app.put('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const { name, email } = req.body;
+    const query = `UPDATE users SET name = ?, email = ? WHERE id = ?`;
+    connection.query(query, [name, email, id], (err, result) => {
+        if (err) {
+            console.error('Error updating user:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('User updated successfully');
+    });
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
