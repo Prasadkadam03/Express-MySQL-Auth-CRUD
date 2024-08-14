@@ -19,3 +19,19 @@ connection.connect(err => {
     }
     console.log('MySQL Connected...');
 });
+
+app.get('/users', (req, res) => {
+    const query = 'SELECT * FROM users';
+    connection.query(query, (err, results) => {
+        if (err) {
+            console.error('Error retrieving users:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.json(results);
+    });
+});
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`Server started on port ${PORT}`);
+});
