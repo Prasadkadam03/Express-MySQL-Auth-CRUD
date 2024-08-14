@@ -16,7 +16,7 @@ Follow the steps below to set up and run the application:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/your-username/express-mysql-crud.git
+git clone https://github.com/Prasadkadam03/Express_with_CRUD.git
 cd express-mysql-crud
 ```
 
