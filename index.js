@@ -68,6 +68,18 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
+app.delete('/users/:id', (req, res) => {
+    const { id } = req.params;
+    const query = `DELETE FROM users WHERE id = ?`;
+    connection.query(query, [id], (err, result) => {
+        if (err) {
+            console.error('Error deleting user:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('User deleted successfully');
+    });
+});
+
 const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server started on port ${PORT}`);
