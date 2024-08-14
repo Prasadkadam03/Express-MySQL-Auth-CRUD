@@ -43,6 +43,17 @@ app.get('/users/:id', (req, res) => {
     });
 });
 
+app.post('/users', (req, res) => {
+    const { name, email } = req.body;
+    const query = `INSERT INTO users (name, email) VALUES (?, ?)`;
+    connection.query(query, [name, email], (err, result) => {
+        if (err) {
+            console.error('Error creating user:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('User created successfully');
+    });
+});
 
 const PORT = 3000;
 app.listen(PORT, () => {
