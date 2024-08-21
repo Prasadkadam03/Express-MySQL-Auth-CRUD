@@ -61,7 +61,23 @@ app.post('/login', (req, res) => {
     });
 });
 
-app.get('/users', (req, res) => {
+const authenticateJWT = (req, res, next) => {
+    const token = req.headers.authorization;
+    if (!token) {
+        return res.status(401).send('Access denied');
+    }
+
+    jwt.verify(token, jwtSecret, (err, user) => {
+        if (err) {
+            return res.status(403).send('Invalid token');
+        }
+        req.user = user;
+        next();
+    });
+};
+
+
+app.get('/users', authenticateJWT, (req, res) => {
     const query = 'SELECT * FROM users';
     connection.query(query, (err, results) => {
         if (err) {
