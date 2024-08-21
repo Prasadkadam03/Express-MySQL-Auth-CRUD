@@ -88,7 +88,7 @@ app.get('/users', authenticateJWT, (req, res) => {
     });
 });
 
-app.get('/users/:id', (req, res) => {
+app.get('/users/:id', authenticateJWT, (req, res) => {
     const { id } = req.params;
     const query = `SELECT * FROM users WHERE id = ?`;
     connection.query(query, [id], (err, result) => {
@@ -100,7 +100,7 @@ app.get('/users/:id', (req, res) => {
     });
 });
 
-app.post('/users', (req, res) => {
+app.post('/users', authenticateJWT, (req, res) => {
     const { name, email } = req.body;
     const query = `INSERT INTO users (name, email) VALUES (?, ?)`;
     connection.query(query, [name, email], (err, result) => {
@@ -112,7 +112,7 @@ app.post('/users', (req, res) => {
     });
 });
 
-app.put('/users/:id', (req, res) => {
+app.put('/users/:id', authenticateJWT, (req, res) => {
     const { id } = req.params;
     const { name, email } = req.body;
     const query = `UPDATE users SET name = ?, email = ? WHERE id = ?`;
@@ -125,7 +125,7 @@ app.put('/users/:id', (req, res) => {
     });
 });
 
-app.delete('/users/:id', (req, res) => {
+app.delete('/users/:id', authenticateJWT, (req, res) => {
     const { id } = req.params;
     const query = `DELETE FROM users WHERE id = ?`;
     connection.query(query, [id], (err, result) => {
