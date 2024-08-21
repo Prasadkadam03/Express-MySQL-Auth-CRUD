@@ -38,6 +38,29 @@ app.post('/signup', (req, res) => {
     });
 });
 
+app.post('/login', (req, res) => {
+    const { email, password } = req.body;
+    const query = 'SELECT * FROM users WHERE email = ?';
+    connection.query(query, [email], (err, results) => {
+        if (err) {
+            console.error('Error retrieving user:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        if (results.length === 0) {
+            return res.status(400).send('Invalid email or password');
+        }
+
+        const user = results[0];
+        const isPasswordValid = bcrypt.compareSync(password, user.password);
+        if (!isPasswordValid) {
+            return res.status(400).send('Invalid email or password');
+        }
+
+        const token = jwt.sign({ id: user.id }, jwtSecret, { expiresIn: '1h' });
+        res.json({ token });
+    });
+});
+
 app.get('/users', (req, res) => {
     const query = 'SELECT * FROM users';
     connection.query(query, (err, results) => {
