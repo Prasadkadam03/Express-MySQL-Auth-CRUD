@@ -1,6 +1,11 @@
 const express = require('express');
 const mysql = require('mysql');
 const bodyParser = require('body-parser');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
+const jwtSecret = 'Maverick';
+
 
 const app = express();
 app.use(bodyParser.json());
@@ -18,6 +23,19 @@ connection.connect(err => {
         process.exit(1);
     }
     console.log('MySQL Connected...');
+});
+
+app.post('/signup', (req, res) => {
+    const { name, email, password } = req.body;
+    const hashedPassword = bcrypt.hashSync(password, 10);
+    const query = 'INSERT INTO users (name, email, password) VALUES (?, ?, ?)';
+    connection.query(query, [name, email, hashedPassword], (err, result) => {
+        if (err) {
+            console.error('Error creating user:', err);
+            return res.status(500).send('Internal Server Error');
+        }
+        res.send('User registered successfully');
+    });
 });
 
 app.get('/users', (req, res) => {
