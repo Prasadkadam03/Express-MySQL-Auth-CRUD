@@ -6,7 +6,6 @@ const jwt = require('jsonwebtoken');
 
 const jwtSecret = 'Maverick';
 
-
 const app = express();
 app.use(bodyParser.json());
 
@@ -57,25 +56,39 @@ app.post('/login', (req, res) => {
         }
 
         const token = jwt.sign({ id: user.id }, jwtSecret, { expiresIn: '1h' });
-        res.json({ token });
+
+        const updateQuery = 'UPDATE users SET session_token = ? WHERE id = ?';
+        connection.query(updateQuery, [token, user.id], (err) => {
+            if (err) {
+                console.error('Error updating session token:', err);
+                return res.status(500).send('Internal Server Error');
+            }
+            res.json({ message: 'Login successful', token });
+        });
     });
 });
 
 const authenticateJWT = (req, res, next) => {
-    const token = req.headers.authorization;
+    const token = req.headers.authorization?.split(' ')[1];
     if (!token) {
         return res.status(401).send('Access denied');
     }
 
-    jwt.verify(token, jwtSecret, (err, user) => {
+    jwt.verify(token, jwtSecret, (err, decoded) => {
         if (err) {
             return res.status(403).send('Invalid token');
         }
-        req.user = user;
-        next();
+
+        const query = 'SELECT * FROM users WHERE id = ? AND session_token = ?';
+        connection.query(query, [decoded.id, token], (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(403).send('Session invalid or logged out from another device');
+            }
+            req.user = decoded;
+            next();
+        });
     });
 };
-
 
 app.get('/users', authenticateJWT, (req, res) => {
     const query = 'SELECT * FROM users';
@@ -88,52 +101,14 @@ app.get('/users', authenticateJWT, (req, res) => {
     });
 });
 
-app.get('/users/:id', authenticateJWT, (req, res) => {
-    const { id } = req.params;
-    const query = `SELECT * FROM users WHERE id = ?`;
-    connection.query(query, [id], (err, result) => {
+app.post('/logout', authenticateJWT, (req, res) => {
+    const updateQuery = 'UPDATE users SET session_token = NULL WHERE id = ?';
+    connection.query(updateQuery, [req.user.id], (err) => {
         if (err) {
-            console.error('Error retrieving user:', err);
+            console.error('Error logging out:', err);
             return res.status(500).send('Internal Server Error');
         }
-        res.json(result);
-    });
-});
-
-app.post('/users', authenticateJWT, (req, res) => {
-    const { name, email } = req.body;
-    const query = `INSERT INTO users (name, email) VALUES (?, ?)`;
-    connection.query(query, [name, email], (err, result) => {
-        if (err) {
-            console.error('Error creating user:', err);
-            return res.status(500).send('Internal Server Error');
-        }
-        res.send('User created successfully');
-    });
-});
-
-app.put('/users/:id', authenticateJWT, (req, res) => {
-    const { id } = req.params;
-    const { name, email } = req.body;
-    const query = `UPDATE users SET name = ?, email = ? WHERE id = ?`;
-    connection.query(query, [name, email, id], (err, result) => {
-        if (err) {
-            console.error('Error updating user:', err);
-            return res.status(500).send('Internal Server Error');
-        }
-        res.send('User updated successfully');
-    });
-});
-
-app.delete('/users/:id', authenticateJWT, (req, res) => {
-    const { id } = req.params;
-    const query = `DELETE FROM users WHERE id = ?`;
-    connection.query(query, [id], (err, result) => {
-        if (err) {
-            console.error('Error deleting user:', err);
-            return res.status(500).send('Internal Server Error');
-        }
-        res.send('User deleted successfully');
+        res.send('Logged out successfully');
     });
 });
 
