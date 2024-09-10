@@ -1,10 +1,10 @@
-# Express.js CRUD Application with MySQL
+# Express.js CRUD Application with MySQL and JWT Authentication
 
-This is a simple CRUD (Create, Read, Update, Delete) application built using Express.js and MySQL. The application allows you to perform basic operations on a `users` table in a MySQL database.
+This application is a simple CRUD (Create, Read, Update, Delete) project built with Express.js and MySQL, enhanced with JWT (JSON Web Token) authentication. It allows users to register, log in, and manage session tokens for secure access to user data.
 
 ## Prerequisites
 
-Before you begin, ensure you have the following installed on your local development environment:
+Ensure you have the following installed on your local development environment:
 
 - [Node.js](https://nodejs.org/en/)
 - [MySQL](https://www.mysql.com/)
@@ -41,7 +41,7 @@ npm install
    ```
 
 3. **Create the Users Table:**
-   - Switch to the `crud_db` database and create a `users` table:
+   - Switch to the `crud_db` database and create a `users` table with an additional `password` and `session_token` column:
 
    ```sql
    USE crud_db;
@@ -49,7 +49,9 @@ npm install
    CREATE TABLE users (
        id INT AUTO_INCREMENT PRIMARY KEY,
        name VARCHAR(100),
-       email VARCHAR(100)
+       email VARCHAR(100) UNIQUE,
+       password VARCHAR(255),
+       session_token VARCHAR(255)
    );
    ```
 
@@ -65,7 +67,6 @@ const connection = mysql.createConnection({
     database: 'crud_db' // Ensure this matches the database you created
 });
 ```
-
 
 ### 5. Start the Server
 
@@ -84,15 +85,48 @@ MySQL Connected...
 
 ### 6. Use the API Endpoints
 
-You can now use the following API endpoints to interact with the `users` table:
+You can use the following API endpoints to interact with the application:
+
+#### Authentication Routes
+
+- **User Signup:**
+  - **POST** `/signup`
+  - Request body (JSON):
+    ```json
+    {
+        "name": "John Doe",
+        "email": "johndoe@example.com",
+        "password": "yourpassword"
+    }
+    ```
+
+- **User Login:**
+  - **POST** `/login`
+  - Request body (JSON):
+    ```json
+    {
+        "email": "johndoe@example.com",
+        "password": "yourpassword"
+    }
+    ```
+  - Returns a JWT token to be used in headers for authenticated requests.
+
+- **User Logout:**
+  - **POST** `/logout`
+  - Requires authentication with the JWT token.
+  
+#### User Management Routes (Protected)
+
+All user management routes require the `Authorization` header with the format:  
+`Authorization: Bearer <token>`
 
 - **Create a new user:**
   - **POST** `/users`
   - Request body (JSON):
     ```json
     {
-        "name": "John Doe",
-        "email": "johndoe@example.com"
+        "name": "Jane Doe",
+        "email": "janedoe@example.com"
     }
     ```
   
@@ -118,6 +152,14 @@ You can now use the following API endpoints to interact with the `users` table:
   - **DELETE** `/users/:id`
   - Example: `/users/1`
 
-### 7. Stop the Server
+### 7. Testing the API with Postman
+
+1. **Register a User:** Send a `POST` request to `/signup` with the user's details.
+2. **Login:** Send a `POST` request to `/login` with the user's credentials to receive a JWT token.
+3. **Access Protected Routes:** Use the token from the login response in the `Authorization` header as `Bearer <token>` to access routes like `/users`.
+4. **Logout:** Send a `POST` request to `/logout` with the JWT token in the `Authorization` header.
+
+### 8. Stop the Server
 
 To stop the server, simply press `Ctrl + C` in the terminal where the server is running.
+
